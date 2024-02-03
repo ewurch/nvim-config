@@ -11,10 +11,13 @@ return {
     ]]
     local function get_hostname()
       local f = io.popen("/bin/hostname")
-      local hostname = f:read("*a") or "ewurch"
-      f:close()
-
-      return hostname
+      if f == nil then
+        return "ewurch"
+      else
+        local hostname = f:read("*a")
+        f:close()
+        return hostname
+      end
     end
     logo = logo .. "@" .. get_hostname()
     logo = string.rep("\n", 8) .. logo .. "\n\n"
