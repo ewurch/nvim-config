@@ -3,19 +3,18 @@ return {
   dependencies = {
     "nvim-lua/plenary.nvim",
     "nvim-treesitter/nvim-treesitter",
-    "rouge8/neotest-rust",
-    "nvim-neotest/neotest-go",
-    "nvim-neotest/neotest-plenary",
-    "haydenmeade/neotest-jest",
     "nvim-neotest/neotest-python",
   },
   keys = {
-    "<Space>tt",
-    "<Space>to",
-    "<Space>ts",
-    "<Space>tf",
-    "<Space>td",
+    { "<Space>tt", desc = "Run test" },
+    { "<Space>to", desc = "Toggle output" },
+    { "<Space>ts", desc = "Test summary" },
+    { "<Space>tf", desc = "Run file tests" },
+    { "<Space>td", desc = "Debug test" },
+    { "<Space>tp", desc = "Open test panel" },
+    { "<Space>ta", desc = "Run project test suite" },
   },
+
   config = function()
     local neotest = require("neotest")
     neotest.setup({
@@ -27,18 +26,10 @@ return {
         unknown = "",
       },
       output = {
-        open_on_run = false,
+        enabled = true,
+        open_on_run = true,
       },
       adapters = {
-        require("neotest-rust")({
-          args = { "--no-capture" },
-          dap_adapter = "lldb",
-        }),
-        require("neotest-go"),
-        require("neotest-plenary"),
-        require("neotest-jest")({
-          jestCommand = "npm run test:run --",
-        }),
         require("neotest-python")({
           runner = "pytest",
         }),
@@ -51,25 +42,15 @@ return {
       })
       neotest.run.run()
     end)
+
     vim.keymap.set("n", "<Space>to", function()
       neotest.output.open({
         enter = true,
-        open_win = function(settings)
-          local height = math.min(settings.height, vim.o.lines - 2)
-          local width = math.min(settings.width, vim.o.columns - 2)
-          return vim.api.nvim_open_win(0, true, {
-            relative = "editor",
-            row = 7,
-            col = (vim.o.columns - width) / 2,
-            width = width,
-            height = height,
-            style = "minimal",
-            border = vim.g.floating_window_border,
-            noautocmd = true,
-          })
-        end,
+        auto_close = true,
+        new_buf = true,
       })
     end)
+
     vim.keymap.set("n", "<Space>ts", function()
       neotest.summary.toggle()
     end)
@@ -84,6 +65,15 @@ return {
         title = "Neotest",
       })
       neotest.run.run({ strategy = "dap" })
+    end)
+    vim.keymap.set("n", "<Space>tp", function()
+      neotest.output_panel.open()
+    end)
+    vim.keymap.set("n", "<Space>ta", function()
+      vim.notify_once("Running project test suite", vim.log.levels.INFO, {
+        title = "Neotest",
+      })
+      neotest.run.run(vim.fn.getcwd())
     end)
   end,
 }
